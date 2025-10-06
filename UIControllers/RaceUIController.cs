@@ -1,7 +1,9 @@
 using System;
 using System.Collections;
 using TMPro;
+using Unity.Netcode;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class RaceUIController : BaseUIController
@@ -21,6 +23,12 @@ public class RaceUIController : BaseUIController
     [SerializeField] private TextMeshProUGUI countdownText;
     [SerializeField] private TextMeshProUGUI raceOverText;
 
+    [SerializeField] private Button exitButton;
+
+    [SerializeField] private GameObject areYouSureGroup;
+    [SerializeField] private Button yesIamSureButton;
+    [SerializeField] private Button noCancelThatButton;
+
 
     private enum ZoomState
     {
@@ -38,6 +46,40 @@ public class RaceUIController : BaseUIController
 
     private bool raceTimerActive = false;
     private bool raceOver = false;
+
+
+
+
+
+    private void Start()
+    {
+        exitButton.onClick.AddListener(() =>
+        {
+            exitButton.interactable = false;
+            areYouSureGroup.SetActive(true);
+        });
+
+        yesIamSureButton.onClick.AddListener(() =>
+        {
+            if (NetworkManager.Singleton.IsServer)
+            {
+                SessionManager.Instance.QuitCreatedSession();
+                SceneManager.LoadScene("Main Menu Scene");
+            }
+            else
+            {
+                RaceManager.Instance.ServerRemovePlayerRpc(NetworkManager.Singleton.LocalClientId);
+                SessionManager.Instance.QuitJoinedSession();
+                SceneManager.LoadScene("Main Menu Scene");
+            }
+        });
+
+        noCancelThatButton.onClick.AddListener(() =>
+        {
+            areYouSureGroup.SetActive(false);
+            exitButton.interactable = true;
+        });
+    }
 
 
 

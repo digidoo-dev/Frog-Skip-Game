@@ -80,10 +80,29 @@ public class RaceManager : NetworkBehaviour
         {
             playerIdToRaceStatisticsDictionary[playerId].FinishedRace(time, spot);
         }
-
     }
 
+    [Rpc(SendTo.Server)]
+    public void ServerRemovePlayerRpc(ulong playerId)
+    {
+        if (playerIdToRaceStatisticsDictionary.ContainsKey(playerId)) playerIdToRaceStatisticsDictionary.Remove(playerId);
+        if (playerIdToPlayerControllerDictionary.ContainsKey(playerId)) playerIdToPlayerControllerDictionary.Remove(playerId);
+        if (playerIdToIsLoadedInToRaceScene.ContainsKey(playerId)) playerIdToIsLoadedInToRaceScene.Remove(playerId);
 
+        // If a player exits while being the last one to not finish - stop the countdown and finish the race.
+        if (raceState == RaceState.CountdownToFinish && numberOfPlayersWhoFinishedRace == playerIdToRaceStatisticsDictionary.Count)
+        {
+            FinishRace();
+        }
+
+        ClientsRemovePlayerRpc(playerId);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void ClientsRemovePlayerRpc(ulong playerId)
+    {
+        if (playerIdToRaceStatisticsDictionary.ContainsKey(playerId)) playerIdToRaceStatisticsDictionary.Remove(playerId);
+    }
 
 
 
@@ -122,7 +141,7 @@ public class RaceManager : NetworkBehaviour
         }
     }
 
-    private new void OnDestroy()
+    private void OnDisable()
     {
         if (IsServer)
         {
