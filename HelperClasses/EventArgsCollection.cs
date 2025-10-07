@@ -70,4 +70,16 @@ public static class EventArgsCollection
             Readiness = readiness;
         }
     }
+
+    public class ChatMessageArgs : EventArgs
+    {
+        public string PlayerName { get; private set; }
+        public string Message { get; private set; }
+
+        public ChatMessageArgs(string playerName, string message)
+        {
+            PlayerName = playerName;
+            Message = message;
+        }
+    }
 }

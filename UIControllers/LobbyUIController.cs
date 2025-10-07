@@ -19,6 +19,7 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private Button backButton;
 
     [SerializeField] private LevelChooserController levelChooserController;
+    [SerializeField] private ChatController chatController;
 
     [SerializeField] private Button readyButton;
     [SerializeField] private Button startGameButton;
@@ -57,6 +58,7 @@ public class LobbyUIController : MonoBehaviour
         LobbyManager.Instance.OnLobbyChanged += LobbyManager_OnLobbyChanged;
         LobbyManager.Instance.OnPlayerReadinessChanged += LobbyManager_OnPlayerReadinessChanged;
         LobbyManager.Instance.OnSelectedLevelChanged += LobbyManager_OnSelectedLevelChanged;
+        LobbyManager.Instance.OnChatMessageReceived += LobbyManager_OnChatMessageReceived;
 
         hasStarted = true;
 
@@ -92,15 +94,22 @@ public class LobbyUIController : MonoBehaviour
         });
     }
 
- 
+
     private void OnDestroy()
     {
         LobbyManager.Instance.OnLobbyChanged -= LobbyManager_OnLobbyChanged;
         LobbyManager.Instance.OnPlayerReadinessChanged -= LobbyManager_OnPlayerReadinessChanged;
         LobbyManager.Instance.OnSelectedLevelChanged -= LobbyManager_OnSelectedLevelChanged;
+        LobbyManager.Instance.OnChatMessageReceived -= LobbyManager_OnChatMessageReceived;
+
     }
 
 
+    private void LobbyManager_OnChatMessageReceived(object sender, System.EventArgs e)
+    {
+        var args = e as EventArgsCollection.ChatMessageArgs;
+        chatController.AddMessageToChatView(args.PlayerName, args.Message);
+    }
 
 
     private void LobbyManager_OnSelectedLevelChanged(object sender, System.EventArgs e)

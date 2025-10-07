@@ -12,6 +12,7 @@ public class LobbyManager : NetworkBehaviour
     public event EventHandler OnLobbyChanged;
     public event EventHandler OnPlayerReadinessChanged;
     public event EventHandler OnSelectedLevelChanged;
+    public event EventHandler OnChatMessageReceived;
 
 
     [SerializeField] private GameObject raceManagerPrefab;
@@ -112,6 +113,20 @@ public class LobbyManager : NetworkBehaviour
         selectedLevelIndex = indexOfLevel;
 
         OnSelectedLevelChanged?.Invoke(this, new EventArgsCollection.IntegerArgs(selectedLevelIndex));
+    }
+
+    [Rpc(SendTo.Server)]
+    public void NewChatMessageRpc(ulong playerId, string message)
+    {
+        if (!playerClientIdToInfoDictionary.ContainsKey(playerId) || message.Length == 0) return;
+
+        SendChatMessageToClientsRpc(playerClientIdToInfoDictionary[playerId].FrogName, message);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SendChatMessageToClientsRpc(string playerName, string message)
+    {
+        OnChatMessageReceived?.Invoke(this, new EventArgsCollection.ChatMessageArgs(playerName, message));
     }
 
 
