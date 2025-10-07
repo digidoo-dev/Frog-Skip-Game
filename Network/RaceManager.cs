@@ -152,7 +152,7 @@ public class RaceManager : NetworkBehaviour
 
     private void SceneManager_OnLoadComplete(ulong clientId, string sceneName, UnityEngine.SceneManagement.LoadSceneMode loadSceneMode)
     {
-        if (sceneName != "Race Scene") return;
+        if (!sceneName.StartsWith("Race Scene")) return;
         playerIdToIsLoadedInToRaceScene[clientId] = true;
 
         IfAllPlayersAreLoadedInSpawnPlayerObjects();

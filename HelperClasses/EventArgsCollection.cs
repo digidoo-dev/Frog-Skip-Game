@@ -14,6 +14,12 @@ public static class EventArgsCollection
         }
     }
 
+    public class IntegerArgs : EventArgs
+    {
+        public int Value { get; private set; }
+        public IntegerArgs(int value) { Value = value; }
+
+    }
 
     public class MainMenuStateChangeArgs : EventArgs
     {

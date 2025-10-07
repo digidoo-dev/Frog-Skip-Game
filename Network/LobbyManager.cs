@@ -11,7 +11,7 @@ public class LobbyManager : NetworkBehaviour
 
     public event EventHandler OnLobbyChanged;
     public event EventHandler OnPlayerReadinessChanged;
-
+    public event EventHandler OnSelectedLevelChanged;
 
 
     [SerializeField] private GameObject raceManagerPrefab;
@@ -19,6 +19,9 @@ public class LobbyManager : NetworkBehaviour
 
 
     private Dictionary<ulong, LobbyPlayerInfo> playerClientIdToInfoDictionary = new Dictionary<ulong, LobbyPlayerInfo>();
+
+    private List<LevelSO> allLevelsList = new List<LevelSO>();
+    private int selectedLevelIndex = 0;
 
 
     [Rpc(SendTo.Server)]
@@ -85,6 +88,35 @@ public class LobbyManager : NetworkBehaviour
     }
 
     [Rpc(SendTo.Server)]
+    public void ChangeSelectedLevelRpc(int indexOfLevel)
+    {
+        if (indexOfLevel >= allLevelsList.Count) return;
+        selectedLevelIndex = indexOfLevel;
+
+        SyncSelectedLevelWithClientsRpc(selectedLevelIndex);
+
+        OnSelectedLevelChanged?.Invoke(this, new EventArgsCollection.IntegerArgs(selectedLevelIndex));
+
+    }
+
+    [Rpc(SendTo.Server)]
+    private void ShareSelectedLevelRpc()
+    {
+        SyncSelectedLevelWithClientsRpc(selectedLevelIndex);
+    }
+
+    [Rpc(SendTo.ClientsAndHost)]
+    private void SyncSelectedLevelWithClientsRpc(int indexOfLevel)
+    {
+        if (selectedLevelIndex == indexOfLevel) return;
+        selectedLevelIndex = indexOfLevel;
+
+        OnSelectedLevelChanged?.Invoke(this, new EventArgsCollection.IntegerArgs(selectedLevelIndex));
+    }
+
+
+
+    [Rpc(SendTo.Server)]
     public void LaunchServerRejoiningLobbyProcessRpc()
     {
         foreach(ulong id in playerClientIdToInfoDictionary.Keys)
@@ -92,11 +124,14 @@ public class LobbyManager : NetworkBehaviour
             playerClientIdToInfoDictionary[id].SetReadiness(false);
             SyncReadinessWithClientsRpc(id, false);
         }
+        selectedLevelIndex = 0;
+        SyncSelectedLevelWithClientsRpc(0);
+
         LaunchClientsRejoiningLobbyProcessRpc();
     }
 
     [Rpc(SendTo.ClientsAndHost)]
-    public void LaunchClientsRejoiningLobbyProcessRpc()
+    private void LaunchClientsRejoiningLobbyProcessRpc()
     {
         StartCoroutine(WaitForLobbyUIThenDrawIt());
     }
@@ -127,11 +162,14 @@ public class LobbyManager : NetworkBehaviour
         {
             Instance = this;
         }
+
+        allLevelsList = Resources.Load<LevelListSO>(typeof(LevelListSO).Name).levelList;
     }
 
     private void Start()
     {
         AddNewPlayerToListRpc(NetworkManager.Singleton.LocalClientId, PlayerInfoHolder.FrogName, PlayerInfoHolder.FrogColor);
+        ShareSelectedLevelRpc();
 
         if (IsServer)
         {
@@ -190,7 +228,7 @@ public class LobbyManager : NetworkBehaviour
         var raceManager = Instantiate(raceManagerPrefab).GetComponent<NetworkObject>();
         raceManager.Spawn(false);
 
-        NetworkManager.Singleton.SceneManager.LoadScene("Race Scene", LoadSceneMode.Single);
+        NetworkManager.Singleton.SceneManager.LoadScene(allLevelsList[selectedLevelIndex].levelSceneName, LoadSceneMode.Single);
     }
 
     

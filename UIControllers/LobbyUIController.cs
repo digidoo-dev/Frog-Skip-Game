@@ -18,6 +18,8 @@ public class LobbyUIController : MonoBehaviour
     [SerializeField] private TextMeshProUGUI joinCodeText;
     [SerializeField] private Button backButton;
 
+    [SerializeField] private LevelChooserController levelChooserController;
+
     [SerializeField] private Button readyButton;
     [SerializeField] private Button startGameButton;
 
@@ -49,10 +51,12 @@ public class LobbyUIController : MonoBehaviour
             lobbyNameText.text = joinedSession.Name;
             joinCodeText.text = joinedSession.Code;
             startGameButton.gameObject.SetActive(false);
+            levelChooserController.HideSelectionButtons();
         }
 
         LobbyManager.Instance.OnLobbyChanged += LobbyManager_OnLobbyChanged;
         LobbyManager.Instance.OnPlayerReadinessChanged += LobbyManager_OnPlayerReadinessChanged;
+        LobbyManager.Instance.OnSelectedLevelChanged += LobbyManager_OnSelectedLevelChanged;
 
         hasStarted = true;
 
@@ -88,16 +92,22 @@ public class LobbyUIController : MonoBehaviour
         });
     }
 
-
+ 
     private void OnDestroy()
     {
         LobbyManager.Instance.OnLobbyChanged -= LobbyManager_OnLobbyChanged;
         LobbyManager.Instance.OnPlayerReadinessChanged -= LobbyManager_OnPlayerReadinessChanged;
+        LobbyManager.Instance.OnSelectedLevelChanged -= LobbyManager_OnSelectedLevelChanged;
     }
 
 
 
 
+    private void LobbyManager_OnSelectedLevelChanged(object sender, System.EventArgs e)
+    {
+        int levelIndex = (e as EventArgsCollection.IntegerArgs).Value;
+        levelChooserController.SetToLevel(levelIndex);
+    }
 
 
     private void LobbyManager_OnPlayerReadinessChanged(object sender, System.EventArgs e)
