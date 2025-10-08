@@ -48,6 +48,12 @@ public class MainMenuStateManager : BaseStateManager
 
 
 
+    public void OpenHelpScene()
+    {
+        SceneManager.LoadScene("HowTo Scene");
+    }
+
+
 
 
     private IEnumerator SwitchToMainButtonsAfterIntroAnimation(float seconds)
